@@ -125,6 +125,33 @@ jobs:
             echo "⚠️  No vendor.img asset found for $STOCK_DEVICE, skipping."
           fi
 
+      - name: Adjust build partitions based on available extras
+        env:
+          STOCK_DEVICE: ${{ github.event.inputs.STOCK_DEVICE }}
+        run: |
+          set -e
+
+          EXTRAS_DIR="QuantumROM/Devices/${STOCK_DEVICE}/extras"
+          BASE_PARTITIONS="product,system_ext,system"
+          EXTRA_PARTITIONS=""
+
+          if [ -f "$EXTRAS_DIR/vendor.img" ]; then
+            EXTRA_PARTITIONS="${EXTRA_PARTITIONS},vendor"
+          else
+            echo "⚠️  vendor.img not found in $EXTRAS_DIR — vendor partition will be skipped."
+          fi
+
+          if [ -f "$EXTRAS_DIR/odm.img" ]; then
+            EXTRA_PARTITIONS="${EXTRA_PARTITIONS},odm"
+          else
+            echo "⚠️  odm.img not found in $EXTRAS_DIR — odm partition will be skipped."
+          fi
+
+          FINAL_PARTITIONS="${BASE_PARTITIONS}${EXTRA_PARTITIONS}"
+          echo "✅ BUILD_PARTITIONS will be: $FINAL_PARTITIONS"
+
+          sed -i "s|^export BUILD_PARTITIONS=.*|export BUILD_PARTITIONS=\"${FINAL_PARTITIONS}\"|" sixteen.sh
+
       - name: Start Rom Build For ${{ github.event.inputs.STOCK_DEVICE }}
         run: |
           sudo bash sixteen.sh \
