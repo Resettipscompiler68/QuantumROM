@@ -85,21 +85,53 @@ ODM_IMG="$OUT_DIR/odm.img"
 [[ -f "$VENDOR_IMG" ]] && HAS_VENDOR=true || warn "vendor.img not found — skipping"
 [[ -f "$ODM_IMG"    ]] && HAS_ODM=true    || warn "odm.img not found — skipping"
 
-# Boot + dtbo pair
+# Boot + dtbo — independent
+HAS_BOOT=false
+HAS_DTBO=false
+
 BOOT_TMP="$(mktemp -d)"
 BOOT_DTBO_ZIP="$(find "$EXTRA_DIR" -maxdepth 2 -type f -name "boot-dtbo.*.zip" | head -n1)"
 if [[ -n "$BOOT_DTBO_ZIP" ]]; then
     log "Found boot-dtbo zip: $(basename "$BOOT_DTBO_ZIP")"
     7z e -y "$BOOT_DTBO_ZIP" -o"$BOOT_TMP" boot.img dtbo.img >/dev/null 2>&1 || \
         unzip -o "$BOOT_DTBO_ZIP" boot.img dtbo.img -d "$BOOT_TMP" >/dev/null 2>&1
-    if [[ -f "$BOOT_TMP/boot.img" && -f "$BOOT_TMP/dtbo.img" ]]; then
-        HAS_BOOT=true
-        ok "boot.img and dtbo.img extracted."
-    else
-        warn "boot-dtbo zip found but boot.img/dtbo.img missing inside — skipping kernel flash"
-    fi
+    [[ -f "$BOOT_TMP/boot.img" ]] && HAS_BOOT=true && ok "boot.img extracted from zip." \
+        || warn "boot.img not found inside $(basename "$BOOT_DTBO_ZIP") — skipping"
+    [[ -f "$BOOT_TMP/dtbo.img" ]] && HAS_DTBO=true && ok "dtbo.img extracted from zip." \
+        || warn "dtbo.img not found inside $(basename "$BOOT_DTBO_ZIP") — skipping"
 else
-    warn "No boot-dtbo.<codename>.zip found — skipping kernel flash"
+    warn "No boot-dtbo.<codename>.zip found — scanning extras/ for .img files..."
+
+    # Scan all .img files in extras/ and identify them by magic bytes
+    while IFS= read -r -d '' img; do
+        fname="$(basename "$img")"
+
+        # Read magic: Android boot image starts with "ANDROID!" (0x414e44524f494421)
+        magic="$(xxd -p -l 8 "$img" 2>/dev/null | tr -d ' \n')"
+
+        if [[ "$magic" == "414e44524f494421"* ]]; then
+            # Determine if it's boot or dtbo by checking header type at offset 0x28
+            # boot header version >= 2 has dtbo fields; but simplest heuristic:
+            # if filename contains dtbo, treat as dtbo — otherwise treat as boot
+            case "${fname,,}" in
+                *dtbo*)
+                    cp -f "$img" "$BOOT_TMP/dtbo.img"
+                    HAS_DTBO=true
+                    ok "Found dtbo.img via magic scan: $fname"
+                    ;;
+                *)
+                    if ! $HAS_BOOT; then
+                        cp -f "$img" "$BOOT_TMP/boot.img"
+                        HAS_BOOT=true
+                        ok "Found boot.img via magic scan: $fname"
+                    fi
+                    ;;
+            esac
+        fi
+    done < <(find "$EXTRA_DIR" -maxdepth 1 -type f -name "*.img" -print0)
+
+    $HAS_BOOT || warn "No valid boot.img found in extras/ — skipping boot flash"
+    $HAS_DTBO || warn "No valid dtbo.img found in extras/ — skipping dtbo flash"
 fi
 
 # ── Copy partitions to staging ────────────────────────────────────────────────
@@ -108,9 +140,8 @@ cp -f "$SYSTEM_IMG"  "$STAGING/system.img"  && ok "system.img  copied"
 cp -f "$PRODUCT_IMG" "$STAGING/product.img" && ok "product.img copied"
 $HAS_VENDOR && cp -f "$VENDOR_IMG" "$STAGING/vendor.img" && ok "vendor.img  copied"
 $HAS_ODM    && cp -f "$ODM_IMG"    "$STAGING/odm.img"    && ok "odm.img     copied"
-$HAS_BOOT   && cp -f "$BOOT_TMP/boot.img" "$STAGING/boot.img" \
-            && cp -f "$BOOT_TMP/dtbo.img" "$STAGING/dtbo.img" \
-            && ok "boot.img + dtbo.img copied"
+$HAS_BOOT   && cp -f "$BOOT_TMP/boot.img" "$STAGING/boot.img" && ok "boot.img copied"
+$HAS_DTBO   && cp -f "$BOOT_TMP/dtbo.img" "$STAGING/dtbo.img" && ok "dtbo.img copied"
 rm -rf "$BOOT_TMP"
 
 # ── Copy fastboot binaries for Windows ────────────────────────────────────────
@@ -137,10 +168,12 @@ fastboot flash odm     "$SCRIPT_DIR/odm.img"     && ok "odm     flashed"'
 
 # Build kernel flash lines
 KERNEL_SECTION_SH=""
-if $HAS_BOOT; then
+if $HAS_BOOT || $HAS_DTBO; then
     KERNEL_SECTION_SH='
-log "Flashing kernel partitions..."
-fastboot flash boot    "$SCRIPT_DIR/boot.img"    && ok "boot    flashed"
+log "Flashing kernel partitions..."'
+    $HAS_BOOT && KERNEL_SECTION_SH+='
+fastboot flash boot    "$SCRIPT_DIR/boot.img"    && ok "boot    flashed"'
+    $HAS_DTBO && KERNEL_SECTION_SH+='
 fastboot flash dtbo    "$SCRIPT_DIR/dtbo.img"    && ok "dtbo    flashed"'
 fi
 
@@ -198,10 +231,12 @@ $HAS_ODM    && SUPER_LINES_BAT+='
 
 # Build kernel flash lines for bat
 KERNEL_SECTION_BAT=""
-if $HAS_BOOT; then
+if $HAS_BOOT || $HAS_DTBO; then
     KERNEL_SECTION_BAT='
-echo [FLASH] Flashing kernel partitions...
-!FB! flash boot    "%~dp0boot.img"    && echo [OK] boot    flashed
+echo [FLASH] Flashing kernel partitions...'
+    $HAS_BOOT && KERNEL_SECTION_BAT+='
+!FB! flash boot    "%~dp0boot.img"    && echo [OK] boot    flashed'
+    $HAS_DTBO && KERNEL_SECTION_BAT+='
 !FB! flash dtbo    "%~dp0dtbo.img"    && echo [OK] dtbo    flashed'
 fi
 
