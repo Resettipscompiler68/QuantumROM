@@ -131,7 +131,7 @@ jobs:
         run: |
           set -e
 
-          EXTRAS_DIR="QuantumROM/Devices/${STOCK_DEVICE}/extras"
+          EXTRAS_DIR="QuantumROM/Devices/${STOCK_DEVICE}/extra"
           BASE_PARTITIONS="product,system_ext,system"
           EXTRA_PARTITIONS=""
 
