@@ -295,17 +295,12 @@ ui_print(" ");
 ui_print("Proceeding...!");
 ui_print(" ");
 ui_print("****************************************************");
-ui_print("       Q U A N T U M ---- R O M");
+ui_print("       Q U A N T U M ---- R O M !");
 ui_print("****************************************************");
 EOF
 
 # Append the dynamic parts (variables need to be expanded here)
 cat >> "$SCRIPT_FILE" << EOF
-# Unmount logical partitions before touching super metadata
-unmount("/system");
-unmount("/product");
-unmount("/vendor");
-unmount("/odm");
 # Update dynamic partition metadata
 assert(update_dynamic_partitions(package_extract_file("dynamic_partitions_op_list"), package_extract_file("unsparse_super_empty.img")));
 show_progress(1, 200);
