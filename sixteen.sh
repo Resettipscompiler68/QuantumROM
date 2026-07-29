@@ -73,12 +73,8 @@ DISABLE_SECURITY "$FIRM_DIR/$TARGET_DEVICE"
 
 B_ID="$(grep -m1 '^ro.system.build.id=' "$FIRM_DIR/$TARGET_DEVICE/system/system/build.prop" | cut -d= -f2 | tr -d '\r')"
 B_V="$(grep -m1 '^ro.system.build.version.incremental=' "$FIRM_DIR/$TARGET_DEVICE/system/system/build.prop" | cut -d= -f2 | tr -d '\r')"
-BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "ro.build.display.id" "${B_ID} ${B_V} QuantumROM Aurora"
-BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "product" "ro.build.display.id" "${B_ID} ${B_V} QuantumROM Aurora"
-#BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "ro.sf.lcd_density" "420"
-#BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "ro.sf.lcd_height" "2400"
-#BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "ro.sf.lcd_width" "1080"
-#BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "ro.surface_flinger.max_virtual_display_dimension" "4096" 
+BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "ro.build.display.id" "QuantumROM Aurora - 1.0.0 (${B_ID}.${B_V})"
+BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "product" "ro.build.display.id" "QuantumROM Aurora - 1.0.0 (${B_ID}.${B_V})"
 
 BUILD_IMG "$FIRM_DIR/$TARGET_DEVICE" "all" "$OUTPUT_FILESYSTEM" "$OUT_DIR"
 
