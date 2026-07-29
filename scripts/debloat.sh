@@ -143,27 +143,27 @@ DEBLOAT() {
 
     # General bloatware and trackers
     BLOAT_TARGETS+=(
-        "AvatarEmojiSticker" "ccinfo" "EasySetup" "MyDevice" "NSDSWebApp"
+        "ccinfo" "EasySetup" "MyDevice" "NSDSWebApp"
         "NSFusedLocation_v6.0" "SmartSwitchAgent" "SmartSwitchStub" "AASAservice"
-        "DckTimeSyncService" "EnhancedAttestationAgent" "HdmApk" "LiveDrawing"
+        "DckTimeSyncService" "EnhancedAttestationAgent" "HdmApk"
         "MCFDeviceSync" "Moments" "OdaService" "PrivateAccessTokens" "SafetyInformation"
-        "SDMConfig" "StickerFaceARAvatar"
+        "SDMConfig"
         # from original
         "HMT" "DigitalWellbeing" "FactoryCameraFB" "WlanTest" "AirGlance"
         "AirReadingGlass" "AndroidGlassesCore" "SOAgent77" "ARCore" "ARDrawing"
         "ARZone" "BGMProvider" "SingleTakeService" "BixbyWakeup" "Fast" "FunModeSDK"
         "KidsHome_Installer" "LinkSharing_v11" "MdecService" "MoccaMobile"
         "Netflix_stub" "PhotoTable" "UnifiedWFC" "VideoEditorLite_Dream_N"
-        "VisionIntelligence3.7" "VTCameraSetting" "WifiGuider" "CIDManager"
+        "VTCameraSetting" "WifiGuider" "CIDManager"
         "serviceModeApp_FB" "EarphoneTypeC" "HashTagService" "MemorySaver_O_Refresh"
         "MultiControl" "MultiControlVP6" "OMCAgent5" "OneStoreService" "SOAgent7"
         "SOAgent75" "SolarAudio-service" "SumeNNService" "TADownloader" "TalkbackSE"
         "TaPackAuthFw" "UltraDataSaving_O" "Upday" "YourPhone_P1_5"
-        "vexfwk_service" "VexScanner" "LiveEffectService"
-        "AirCommand" "AutoDoodle" "AvatarEmojiSticker_S" "AvatarPicker"
-        "GalleryWidget" "LiveStickers" "StoryService" "sticker"
-        "Bixby" "BixbyInterpreter" "BixbyVisionFramework3.5" "SettingsBixby"
-        "SmartEye" "SmartPush" "SmartPush_64" "SmartThingsKit"
+        "vexfwk_service" "VexScanner"
+        # Kept: LiveEffectService, LiveDrawing, StoryService, GalleryWidget,
+        #        AutoDoodle, AvatarEmojiSticker, AvatarEmojiSticker_S, AvatarPicker,
+        #        LiveStickers, sticker — Galaxy AI / wallpaper / photo editor features
+        "AirCommand"
         "Duo" "Photos" "AndroidDeveloperVerifier" "YourPhone_Stub"
         "AndroidAutoStub" "AndroidSystemIntelligence" "GoogleRestore" "SamsungMessages"
     )
@@ -189,12 +189,12 @@ DEBLOAT() {
     )
 
     # Intelligent Dynamic FPS (conditional)
-    if [[ "${DEVICE_DISPLAY_HFR_MODE:-1}" -eq 0 ]] || [ "${TARGET_LCD_CONFIG_HFR_MODE:-0}" -lt "1" ]; then
+    if [[ "${DEBLOAT_REMOVE_HFR_SERVICE:-false}" == "true" ]]; then
         BLOAT_TARGETS+=("IntelligentDynamicFpsService")
     fi
 
     # eSIM (conditional)
-    if [[ "$TARGET_COMMON_SUPPORT_EMBEDDED_SIM" == "false" ]]; then
+    if [[ "${DEBLOAT_REMOVE_ESIM:-false}" == "true" ]]; then
         BLOAT_TARGETS+=("EsimKeyString" "EuiccService")
         quantum_remove "system" "etc/permissions/privapp-permissions-com.samsung.android.app.esimkeystring.xml"
         quantum_remove "system" "etc/permissions/privapp-permissions-com.samsung.euicc.xml"
@@ -253,7 +253,7 @@ DEBLOAT() {
     quantum_remove "system" "etc/permissions/privapp-permissions-com.sec.facatfunction.xml"
 
     # NFC LED Cover (conditional)
-    if [ -z "$SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_NFC_LED_COVER_LEVEL" ] || [ "${SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_NFC_LED_COVER_LEVEL:-0}" -lt "30" ]; then
+    if [[ "${DEBLOAT_REMOVE_NFC_LED_COVER:-false}" == "true" ]]; then
         BLOAT_TARGETS+=("LedCoverService")
         quantum_remove "system" "etc/permissions/privapp-permissions-com.sec.android.cover.ledcover.xml"
     fi
@@ -281,11 +281,9 @@ DEBLOAT() {
     quantum_remove "system" "etc/permissions/privapp-permissions-com.sec.android.diagmonagent.xml"
     quantum_remove "system" "etc/permissions/privapp-permissions-com.sec.android.soagent.xml"
 
-    # Samsung AR Emoji
-    BLOAT_TARGETS+=("AREmojiEditor" "AvatarEmojiSticker" "AREmoji")
+    # Samsung AR Emoji — kept AREmojiEditor and AvatarEmojiSticker (Galaxy AI / photo editor)
+    # Only removing the sticker packs permission XMLs that are unused without the full suite
     quantum_remove "system" "etc/default-permissions/default-permissions-com.sec.android.mimage.avatarstickers.xml"
-    quantum_remove "system" "etc/permissions/privapp-permissions-com.samsung.android.aremojieditor.xml"
-    quantum_remove "system" "etc/permissions/privapp-permissions-com.sec.android.mimage.avatarstickers.xml"
     quantum_remove "system" "etc/permissions/signature-permissions-com.sec.android.mimage.avatarstickers.xml"
 
     # Heavy Samsung user apps
