@@ -350,11 +350,11 @@ DEBLOAT() {
     # Mainland China bloatware
     BLOAT_TARGETS+=(
         "TencentWifiSecurity" "TNCPageCN" "TouchToSearch_None_CTS" "ChatPPCN" "CarLinkApp"
-        "Firewall" "SpriteWallpaper" "HongbaoAssistant" "ChinaUnionPay" "ChinaHiddenMenu"
+        "Firewall" "HongbaoAssistant" "ChinaUnionPay" "ChinaHiddenMenu"
         "ChnFileShareKitService" "YourPhone_China" "LinkToWindowsService_China" "GimbalTrackingKit"
         "FusedLocation_Baidu" "MinorMode" "SightCare" "EasymodeContactsWidget81" "VisualCloudCore"
-        "SamsungYellowPage" "PushServiceCN" "BudsUniteManager" "SendHelpMessage" "MuseWallpaper"
-        "SketchBook" "SecSoterService" "SoterSskdsService"
+        "SamsungYellowPage" "PushServiceCN" "BudsUniteManager" "SendHelpMessage" "SketchBook"
+        "SecSoterService" "SoterSskdsService"
     )
     quantum_remove "system" "etc/permissions/privapp-permissions-com.baidu.location.fused.xml"
     quantum_remove "system" "lib/libBDoeminfo_baidusearch.so"
