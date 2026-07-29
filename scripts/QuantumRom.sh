@@ -108,6 +108,30 @@ GET_FF_VALUE() {
 }
 
 
+PATCH_CODEC2_SECCOMP() {
+    if [ "$#" -ne 1 ]; then
+        echo -e "Usage: ${FUNCNAME[0]} <EXTRACTED_FIRM_DIR>"
+        return 1
+    fi
+
+    local TARGET_DIR="$1"
+    local CODEC2_POLICY="$TARGET_DIR/vendor/etc/seccomp_policy/samsung.software.media.c2-base-policy"
+
+    if [ ! -f "$CODEC2_POLICY" ]; then
+        echo "- [WARN] codec2 seccomp policy not found, skipping."
+        return 0
+    fi
+
+    echo "- Applying codec2 mremap seccomp patch. (tks devcore94)"
+    sed -i 's/^mremap: arg3 == 3$/mremap: arg3 == 3 || arg3 == MREMAP_MAYMOVE/' "$CODEC2_POLICY"
+
+    grep -q "mremap: arg3 == 3 || arg3 == MREMAP_MAYMOVE" "$CODEC2_POLICY" || \
+        echo "mremap: arg3 == 3 || arg3 == MREMAP_MAYMOVE" >> "$CODEC2_POLICY"
+
+    echo "  - Done."
+}
+
+
 DETECT_FILESYSTEM() {
     local imgfile="$1"
 
