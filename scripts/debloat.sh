@@ -1,7 +1,6 @@
 #!/bin/bash
 # =============================================================================
-#  QuantumROM — debloat.sh
-#  Atomic debloat (your patch) enriched with all targets from the original
+#  QuantumROM — debloat.sh (Galaxy AI, Messages & Velvet Preserved)
 # =============================================================================
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -142,6 +141,7 @@ DEBLOAT() {
     declare -a BLOAT_TARGETS=()
 
     # General bloatware and trackers
+    # Mantidos do Galaxy AI: SumeNNService, vexfwk_service
     BLOAT_TARGETS+=(
         "ccinfo" "EasySetup" "MyDevice" "NSDSWebApp"
         "NSFusedLocation_v6.0" "SmartSwitchAgent" "SmartSwitchStub" "AASAservice"
@@ -157,15 +157,15 @@ DEBLOAT() {
         "VTCameraSetting" "WifiGuider" "CIDManager"
         "serviceModeApp_FB" "EarphoneTypeC" "HashTagService" "MemorySaver_O_Refresh"
         "MultiControl" "MultiControlVP6" "OMCAgent5" "OneStoreService" "SOAgent7"
-        "SOAgent75" "SolarAudio-service" "SumeNNService" "TADownloader" "TalkbackSE"
+        "SOAgent75" "SolarAudio-service" "TADownloader" "TalkbackSE"
         "TaPackAuthFw" "UltraDataSaving_O" "Upday" "YourPhone_P1_5"
-        "vexfwk_service" "VexScanner"
+        "VexScanner"
         # Kept: LiveEffectService, LiveDrawing, StoryService, GalleryWidget,
-        #        AutoDoodle, AvatarEmojiSticker, AvatarEmojiSticker_S, AvatarPicker,
-        #        LiveStickers, sticker — Galaxy AI / wallpaper / photo editor features
+        #       AutoDoodle, AvatarEmojiSticker, AvatarEmojiSticker_S, AvatarPicker,
+        #       LiveStickers, sticker — Galaxy AI / wallpaper / photo editor features
         "AirCommand"
         "Duo" "Photos" "AndroidDeveloperVerifier" "YourPhone_Stub"
-        "AndroidAutoStub" "AndroidSystemIntelligence" "GoogleRestore" "SamsungMessages"
+        "AndroidAutoStub" "GoogleRestore"
     )
 
     # Samsung TTS voice packs
@@ -227,19 +227,18 @@ DEBLOAT() {
     quantum_remove "system" "etc/permissions/signature-permissions-com.samsung.android.game.gamehome.xml"
 
     # Telemetry-heavy Google apps & stubs
+    # Preservados para IA / Mensagens: Velvet
     BLOAT_TARGETS+=(
-        "BardShell" "Gmail2" "AssistantShell" "Chrome" "DuoStub" "Maps"
-        "PlayAutoInstallConfig" "YouTube" "HotwordEnrollmentOKGoogleEx4HEXAGON"
-        "HotwordEnrollmentXGoogleEx4HEXAGON" "Messages" "Velvet" "ChromeCustomizations"
+        "Gmail2" "Chrome" "DuoStub" "Maps"
+        "PlayAutoInstallConfig" "YouTube"
+        "ChromeCustomizations"
         "com.google.mainline.adservices" "com.google.mainline.telemetry"
-        "GoogleFeedback" "GoogleLocationHistory" "SpeechServicesByGoogle"
+        "GoogleFeedback" "GoogleLocationHistory"
         "GoogleCalendarSyncAdapter" "FamilyLinkParentalControls"
     )
     rm -rf "${TARGET_DIR}/product/app/Gmail2/oat"
     rm -rf "${TARGET_DIR}/product/app/Maps/oat"
-    rm -rf "${TARGET_DIR}/product/app/SpeechServicesByGoogle/oat"
     rm -rf "${TARGET_DIR}/product/app/YouTube/oat"
-    rm -rf "${TARGET_DIR}/product/priv-app"/HotwordEnrollment*
     quantum_remove "product" "overlay/GmsConfigOverlaySearchSelector.apk"
 
     # Samsung factory & hardware test tools
@@ -279,7 +278,7 @@ DEBLOAT() {
     quantum_remove "system" "etc/sysconfig/preinstalled-packages-com.mygalaxy.service.xml"
     quantum_remove "system" "etc/permissions/privapp-permissions-com.samsung.android.dqagent.xml"
     quantum_remove "system" "etc/permissions/privapp-permissions-com.sec.android.diagmonagent.xml"
-    quantum_remove "system" "etc/permissions/privapp-permissions-com.sec.android.soagent.xml"
+    quantum_remove "system" "etc/permissions/privapp-permissions-com.sec.soagent.xml"
 
     # Samsung AR Emoji — kept AREmojiEditor and AvatarEmojiSticker (Galaxy AI / photo editor)
     # Only removing the sticker packs permission XMLs that are unused without the full suite
@@ -287,14 +286,11 @@ DEBLOAT() {
     quantum_remove "system" "etc/permissions/signature-permissions-com.sec.android.mimage.avatarstickers.xml"
 
     # Heavy Samsung user apps
+    # Removido do debloat: OfflineLanguageModel_stub, AndroidSystemIntelligence, SamsungSmartSuggestions
     BLOAT_TARGETS+=(
         "SamsungCalendar" "ClockPackage" "MinusOnePage" "SmartReminder"
-        "OfflineLanguageModel_stub" "Notes40" "SBrowser" "DigitalWellbeing"
-        "SamsungSmartSuggestions" "GearManagerStub"
+        "Notes40" "SBrowser" "DigitalWellbeing" "GearManagerStub"
     )
-    quantum_remove "system" "etc/permissions/signature-permissions-com.samsung.android.offline.languagemodel.xml"
-    quantum_remove "system" "etc/default-permissions/default-permissions-com.samsung.android.messaging.xml"
-    quantum_remove "system" "etc/permissions/privapp-permissions-com.samsung.android.messaging.xml"
 
     # Samsung Pass & biometric security
     BLOAT_TARGETS+=("SamsungPassAutofill_v1" "AuthFramework" "SamsungPass")
