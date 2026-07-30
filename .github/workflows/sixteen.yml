@@ -1,4 +1,4 @@
-name: QuantumROM Tools Sixteen.
+name: Build QuantumROM Aurora.
 
 on:
   workflow_dispatch:
