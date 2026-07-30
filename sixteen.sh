@@ -23,6 +23,7 @@ export APKTOOL="$(pwd)/bin/java/apktool.jar"
 export DEVICES_DIR="$(pwd)/QuantumROM/Devices"
 export VNDKS_COLLECTION="$(pwd)/QuantumROM/vndks"
 export BUILD_PARTITIONS="product,system_ext,system,vendor,odm"
+export PATCHES_DIR="$(pwd)/QuantumROM/patches"
 
 # Source
 source "$(pwd)/scripts/debloat.sh"
@@ -59,6 +60,7 @@ PATCH_FLAG_SECURE "$WORK_DIR/services"
 PATCH_KNOX_GUARD "$WORK_DIR/services" 
 PATCH_FACTORY_TEST "$WORK_DIR/services"
 PATCH_SECURE_FOLDER "$WORK_DIR/services"
+APPLY_PATCH "$WORK_DIR/services" "$PATCHES_DIR/0001-Fix-FOD-brightness-scaling-in-getAlphaMaskLevel.patch" 
 PATCH_PRIVATE_SHARE "$WORK_DIR/samsungkeystoreutils"
 
 RECOMPILE "$APKTOOL" "$FIRM_DIR/$TARGET_DEVICE/system/system/framework" "$WORK_DIR/ssrm" "$WORK_DIR"

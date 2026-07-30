@@ -724,7 +724,7 @@ REPLACE_SMALI_METHOD() {
 HEX_PATCH() {
     echo " "
 
-	if [ "$#" -ne 3 ]; then
+    if [ "$#" -ne 3 ]; then
         echo -e "Usage: ${FUNCNAME[0]} <FILE> <TARGET_VALUE> <REPLACE_VALUE>"
         return 1
     fi
@@ -733,27 +733,38 @@ HEX_PATCH() {
     local FROM="$(echo -e "$2" | tr '[:upper:]' '[:lower:]')"
     local TO="$(echo -e "$3" | tr '[:upper:]' '[:lower:]')"
 
-    [ ! -f "$FILE" ] && { echo -e "File not found: $FILE"; return 1; }
-
-    xxd -p -c 0 "$FILE" | grep -q "$FROM" || {
-        echo -e "- Pattern not found: $FROM"
+    [ ! -f "$FILE" ] && {
+        echo -e "File not found: $FILE"
         return 1
     }
 
-    echo -e "- Patching: $FILE"
-    echo -e "- From $FROM to $TO"
+    # Already patched?
+    if xxd -p -c 0 "$FILE" | grep -qi "$TO"; then
+        echo "- Already patched"
+        return 0
+    fi
+
+    # Original pattern not found
+    if ! xxd -p -c 0 "$FILE" | grep -qi "$FROM"; then
+        echo "- Pattern not found: $FROM"
+        return 1
+    fi
+
+    echo "- Patching: $FILE"
+    echo "- From $FROM to $TO"
+
     [ -f "$FILE.bak" ] || cp "$FILE" "$FILE.bak"
 
     xxd -p -c 0 "$FILE" | sed "s/$FROM/$TO/" | xxd -r -p > "$FILE.tmp" &&
     mv "$FILE.tmp" "$FILE"
 
-    xxd -p -c 0 "$FILE" | grep -q "$TO" && {
-        echo -e "- Patch success"
-        rm -rf "$FILE.bak"        
+    if xxd -p -c 0 "$FILE" | grep -qi "$TO"; then
+        echo "- Patch success"
+        rm -f "$FILE.bak"
         return 0
-    }
+    fi
 
-    echo -e "- Patch failed, restoring backup"
+    echo "- Patch failed, restoring backup"
     mv "$FILE.bak" "$FILE"
     return 1
 }
@@ -2767,6 +2778,46 @@ BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system_ext" "persist.sys.usb.config" "adb
 BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "ro.adb.secure" "0"
 BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "ro.logd.kernel" "true"
 BUILD_PROP "$FIRM_DIR/$TARGET_DEVICE" "system" "persist.log.semlevel" "0xFFFFFFFF"
+}
+
+
+APPLY_PATCH() {
+    echo " "
+
+    if [ "$#" -ne 2 ]; then
+        echo -e "Usage: ${FUNCNAME[0]} <TARGET_DIR_OR_FILE> <PATCH_FILE>"
+        return 1
+    fi
+
+    local TARGET="$1"
+    local PATCH_FILE="$2"
+
+    local ABS_PATCH_FILE
+    ABS_PATCH_FILE="$(readlink -f "$PATCH_FILE")"
+
+    echo "- Applying patch: $(basename "$PATCH_FILE")..."
+
+    if [ ! -f "$ABS_PATCH_FILE" ]; then
+        echo "- Error: Patch file not found at '$PATCH_FILE'!"
+        return 1
+    fi
+
+    if [ ! -e "$TARGET" ]; then
+        echo "- Error: Target directory or file not found at '$TARGET'!"
+        return 1
+    fi
+
+    if [ -d "$TARGET" ]; then
+        patch -p1 -d "$TARGET" -N -r - -i "$ABS_PATCH_FILE" > /dev/null 2>&1
+    else
+        patch -p1 -N -r - -i "$ABS_PATCH_FILE" "$TARGET" > /dev/null 2>&1
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo "- Patch applied successfully!"
+    else
+        echo "- Warning: Failed to apply patch or patch was already applied."
+    fi
 }
 
 
